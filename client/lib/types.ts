@@ -27,7 +27,5 @@ export interface SubmitResult {
   breakdown: {
     questionId: string;
     correct: boolean;
-    given: string;
-    correctAnswer: string;
   }[];
 }
