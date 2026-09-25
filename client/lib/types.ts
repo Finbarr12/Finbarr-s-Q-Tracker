@@ -24,5 +24,10 @@ export interface QuizDetail {
 export interface SubmitResult {
   score: number;
   total: number;
-  breakdown: { questionId: string; correct: boolean }[];
+  breakdown: {
+    questionId: string;
+    correct: boolean;
+    given?: string;
+    correctAnswer?: string;
+  }[];
 }
