@@ -24,7 +24,10 @@ router.post("/", async (req, res) => {
                     .json({ error: "Each question needs text and a correct answer." });
             }
         }
-        const quiz = await Quiz_1.Quiz.create({ title: title.trim(), questions });
+        const quiz = await Quiz_1.Quiz.create({
+            title: title.trim(),
+            questions,
+        });
         res.status(201).json(quiz);
     }
     catch (err) {
@@ -56,12 +59,16 @@ router.get("/:id", async (req, res) => {
             return res.status(400).json({ error: "Invalid quiz id." });
         }
         const quiz = await Quiz_1.Quiz.findById(req.params.id);
-        if (!quiz)
+        if (!quiz) {
             return res.status(404).json({ error: "Quiz not found." });
+        }
         res.json({
             id: quiz._id,
             title: quiz.title,
-            questions: quiz.questions.map((q) => ({ id: q._id, text: q.text })),
+            questions: quiz.questions.map((q) => ({
+                id: q._id,
+                text: q.text,
+            })),
         });
     }
     catch (err) {
@@ -76,24 +83,42 @@ router.post("/:id/submit", async (req, res) => {
             return res.status(400).json({ error: "Invalid quiz id." });
         }
         const quiz = await Quiz_1.Quiz.findById(req.params.id);
-        if (!quiz)
+        if (!quiz) {
             return res.status(404).json({ error: "Quiz not found." });
+        }
         const { answers } = req.body;
         if (!answers || typeof answers !== "object") {
             return res.status(400).json({ error: "Answers are required." });
         }
         let score = 0;
         const breakdown = quiz.questions.map((q) => {
-            const given = (answers[String(q._id)] || "").trim().toLowerCase();
-            const correct = q.correctAnswer.trim().toLowerCase();
-            const isCorrect = given === correct;
-            if (isCorrect)
+            // Get the answer submitted by the user
+            const given = (answers[String(q._id)] || "").trim();
+            // Get the correct answer stored in MongoDB
+            const correctAnswer = q.correctAnswer.trim();
+            // Compare answers without caring about uppercase/lowercase
+            const isCorrect = given.toLowerCase() === correctAnswer.toLowerCase();
+            if (isCorrect) {
                 score += 1;
-            return { questionId: q._id, correct: isCorrect };
+            }
+            return {
+                questionId: String(q._id),
+                given: given,
+                correct: isCorrect,
+                correctAnswer: correctAnswer,
+            };
         });
         const total = quiz.questions.length;
-        await Result_1.Result.create({ quiz: quiz._id, score, total });
-        res.json({ score, total, breakdown });
+        await Result_1.Result.create({
+            quiz: quiz._id,
+            score,
+            total,
+        });
+        res.json({
+            score,
+            total,
+            breakdown,
+        });
     }
     catch (err) {
         console.error(err);
