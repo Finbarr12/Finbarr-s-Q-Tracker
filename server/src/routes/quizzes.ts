@@ -21,11 +21,13 @@ router.post("/", async (req: Request, res: Response) => {
     if (!title || !title.trim()) {
       return res.status(400).json({ error: "Title is required." });
     }
+
     if (!Array.isArray(questions) || questions.length === 0) {
       return res
         .status(400)
         .json({ error: "At least one question is required." });
     }
+
     for (const q of questions) {
       if (!q.text?.trim() || !q.correctAnswer?.trim()) {
         return res
@@ -34,7 +36,11 @@ router.post("/", async (req: Request, res: Response) => {
       }
     }
 
-    const quiz = await Quiz.create({ title: title.trim(), questions });
+    const quiz = await Quiz.create({
+      title: title.trim(),
+      questions,
+    });
+
     res.status(201).json(quiz);
   } catch (err) {
     console.error(err);
@@ -46,12 +52,14 @@ router.post("/", async (req: Request, res: Response) => {
 router.get("/", async (_req: Request, res: Response) => {
   try {
     const quizzes = await Quiz.find().sort({ createdAt: -1 });
+
     const summaries = quizzes.map((q) => ({
       id: q._id,
       title: q.title,
       questionCount: q.questions.length,
       createdAt: q.createdAt,
     }));
+
     res.json(summaries);
   } catch (err) {
     console.error(err);
@@ -65,13 +73,20 @@ router.get("/:id", async (req: Request, res: Response) => {
     if (!Types.ObjectId.isValid(req.params.id)) {
       return res.status(400).json({ error: "Invalid quiz id." });
     }
+
     const quiz = await Quiz.findById(req.params.id);
-    if (!quiz) return res.status(404).json({ error: "Quiz not found." });
+
+    if (!quiz) {
+      return res.status(404).json({ error: "Quiz not found." });
+    }
 
     res.json({
       id: quiz._id,
       title: quiz.title,
-      questions: quiz.questions.map((q) => ({ id: q._id, text: q.text })),
+      questions: quiz.questions.map((q) => ({
+        id: q._id,
+        text: q.text,
+      })),
     });
   } catch (err) {
     console.error(err);
@@ -103,18 +118,24 @@ router.post("/:id/submit", async (req: Request, res: Response) => {
     let score = 0;
 
     const breakdown = quiz.questions.map((q) => {
+      // Get the answer submitted by the user
       const given = (answers[String(q._id)] || "").trim();
+
+      // Get the correct answer stored in MongoDB
       const correctAnswer = q.correctAnswer.trim();
 
+      // Compare answers without caring about uppercase/lowercase
       const isCorrect = given.toLowerCase() === correctAnswer.toLowerCase();
 
-      if (isCorrect) score += 1;
+      if (isCorrect) {
+        score += 1;
+      }
 
       return {
-        questionId: q._id,
-        given,
+        questionId: String(q._id),
+        given: given,
         correct: isCorrect,
-        correctAnswer,
+        correctAnswer: correctAnswer,
       };
     });
 
