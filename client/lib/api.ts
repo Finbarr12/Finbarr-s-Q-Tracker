@@ -5,7 +5,7 @@ import type {
   SubmitResult,
 } from "./types";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
+const API_URL = "https://finbarr-s-q-tracker.onrender.com";
 
 async function handle<T>(res: Response): Promise<T> {
   if (!res.ok) {
@@ -29,7 +29,7 @@ export async function getQuiz(id: string): Promise<QuizDetail> {
 
 export async function createQuiz(
   title: string,
-  questions: QuestionInput[]
+  questions: QuestionInput[],
 ): Promise<{ _id: string }> {
   const res = await fetch(`${API_URL}/api/quizzes`, {
     method: "POST",
@@ -41,7 +41,7 @@ export async function createQuiz(
 
 export async function submitQuiz(
   id: string,
-  answers: Record<string, string>
+  answers: Record<string, string>,
 ): Promise<SubmitResult> {
   const res = await fetch(`${API_URL}/api/quizzes/${id}/submit`, {
     method: "POST",
