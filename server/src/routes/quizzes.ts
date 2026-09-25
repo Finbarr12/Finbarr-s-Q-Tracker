@@ -85,27 +85,52 @@ router.post("/:id/submit", async (req: Request, res: Response) => {
     if (!Types.ObjectId.isValid(req.params.id)) {
       return res.status(400).json({ error: "Invalid quiz id." });
     }
-    const quiz = await Quiz.findById(req.params.id);
-    if (!quiz) return res.status(404).json({ error: "Quiz not found." });
 
-    const { answers } = req.body as { answers?: Record<string, string> };
+    const quiz = await Quiz.findById(req.params.id);
+
+    if (!quiz) {
+      return res.status(404).json({ error: "Quiz not found." });
+    }
+
+    const { answers } = req.body as {
+      answers?: Record<string, string>;
+    };
+
     if (!answers || typeof answers !== "object") {
       return res.status(400).json({ error: "Answers are required." });
     }
 
     let score = 0;
+
     const breakdown = quiz.questions.map((q) => {
-      const given = (answers[String(q._id)] || "").trim().toLowerCase();
-      const correct = q.correctAnswer.trim().toLowerCase();
-      const isCorrect = given === correct;
+      const given = (answers[String(q._id)] || "").trim();
+      const correctAnswer = q.correctAnswer.trim();
+
+      const isCorrect = given.toLowerCase() === correctAnswer.toLowerCase();
+
       if (isCorrect) score += 1;
-      return { questionId: q._id, correct: isCorrect };
+
+      return {
+        questionId: q._id,
+        given,
+        correct: isCorrect,
+        correctAnswer,
+      };
     });
 
     const total = quiz.questions.length;
-    await Result.create({ quiz: quiz._id, score, total });
 
-    res.json({ score, total, breakdown });
+    await Result.create({
+      quiz: quiz._id,
+      score,
+      total,
+    });
+
+    res.json({
+      score,
+      total,
+      breakdown,
+    });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "Could not submit quiz." });
