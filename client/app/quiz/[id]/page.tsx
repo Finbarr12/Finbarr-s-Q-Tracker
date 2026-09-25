@@ -92,7 +92,7 @@ export default function TakeQuizPage() {
                   <span className="reveal-mark">{b.correct ? "✓" : "✕"}</span>
                   <div>
                     <p className="reveal-given">
-                      Your answer: {answers[q.id] || "(left blank)"}
+                      Your answer: {b.given || "(left blank)"}
                     </p>
                     {!b.correct && (
                       <p className="reveal-correct-text">

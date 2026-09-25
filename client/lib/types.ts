@@ -26,6 +26,8 @@ export interface SubmitResult {
   total: number;
   breakdown: {
     questionId: string;
+    given: string;
     correct: boolean;
+    correctAnswer: string;
   }[];
 }
