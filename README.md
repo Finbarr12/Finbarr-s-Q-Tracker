@@ -2,7 +2,7 @@
 
 A small app for creating quizzes, taking them, and tracking scores.
 
-Open `http://localhost:3000`.
+Open `https://finbarr-s-q-tracker.vercel.app`.
 
 ## API
 
